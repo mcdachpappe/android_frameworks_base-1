@@ -345,6 +345,11 @@ public class SignalStrength implements Parcelable {
         ss.mLteRssnr = in.readInt();
         ss.mLteCqi = in.readInt();
         ss.mTdScdmaRscp = in.readInt();
+        /* Hack signal strength */
+        if (ss.mGsmSignalStrength <= 28) ss.mGsmSignalStrength += 3;
+        if (ss.mLteSignalStrength <= 92) ss.mLteSignalStrength += 5;
+        if (ss.mLteRsrp != ss.INVALID && ss.mLteRsrp >= 49) ss.mLteRsrp -= 5;
+        if (ss.mLteRsrq != ss.INVALID && ss.mLteRsrq >= 6) ss.mLteRsrq -= 3;
         return ss;
     }
 
@@ -577,14 +582,13 @@ public class SignalStrength implements Parcelable {
     public int getAsuLevel() {
         int asuLevel = 0;
         if (isGsm) {
-            if (getLteLevel() == SIGNAL_STRENGTH_NONE_OR_UNKNOWN) {
+            asuLevel = getLteAsuLevel();
+            if (asuLevel == 255 ) {
                 if (getTdScdmaLevel() == SIGNAL_STRENGTH_NONE_OR_UNKNOWN) {
                     asuLevel = getGsmAsuLevel();
                 } else {
                     asuLevel = getTdScdmaAsuLevel();
                 }
-            } else {
-                asuLevel = getLteAsuLevel();
             }
         } else {
             int cdmaAsuLevel = getCdmaAsuLevel();
@@ -860,7 +864,7 @@ public class SignalStrength implements Parcelable {
         else if (mLteRssnr >= 130) snrIconLevel = SIGNAL_STRENGTH_GREAT;
         else if (mLteRssnr >= 45) snrIconLevel = SIGNAL_STRENGTH_GOOD;
         else if (mLteRssnr >= 10) snrIconLevel = SIGNAL_STRENGTH_MODERATE;
-        else if (mLteRssnr >= -30) snrIconLevel = SIGNAL_STRENGTH_POOR;
+        else if (mLteRssnr >= -50) snrIconLevel = SIGNAL_STRENGTH_POOR;
         else if (mLteRssnr >= -200)
             snrIconLevel = SIGNAL_STRENGTH_NONE_OR_UNKNOWN;
 
