@@ -150,4 +150,6 @@ interface INotificationManager
     ParceledListSlice getAppActiveNotifications(String callingPkg, int userId);
 
     void setMediaPlaying(boolean playing);
+
+    void forceShowLedLight(int color);
 }
