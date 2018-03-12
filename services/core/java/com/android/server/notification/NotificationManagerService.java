@@ -4225,6 +4225,14 @@ public class NotificationManagerService extends SystemService {
         }
     }
 
+    private void forcePulseLed(int color, int onTime, int offTime) {
+        if (color != -1) {
+            mNotificationLight.setFlashing(color, Light.LIGHT_FLASH_TIMED, onTime, offTime);
+        } else {
+            mNotificationLight.turnOff();
+        }
+    }
+
     @GuardedBy("mNotificationLock")
     boolean shouldMuteNotificationLocked(final NotificationRecord record) {
         // Suppressed because it's a silent update
