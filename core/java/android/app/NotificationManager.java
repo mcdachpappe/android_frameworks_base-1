@@ -1238,4 +1238,14 @@ public class NotificationManager {
             throw e.rethrowFromSystemServer();
         }
     }
+
+    /** @hide */
+    public void forcePulseLedLight(int color, int onTime, int offTime) {
+        final INotificationManager service = getService();
+        try {
+            service.forcePulseLedLight(color, onTime, offTime);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
 }
