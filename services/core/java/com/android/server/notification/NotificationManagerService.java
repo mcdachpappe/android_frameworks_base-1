@@ -3106,6 +3106,11 @@ public class NotificationManagerService extends SystemService {
         public void forceShowLedLight(int color) {
             forceShowLed(color);
         }
+
+        @Override
+        public void forcePulseLedLight(int color, int onTime, int offTime) {
+            forcePulseLed(color, onTime, offTime);
+        }
     };
 
     private void applyAdjustment(NotificationRecord r, Adjustment adjustment) {
