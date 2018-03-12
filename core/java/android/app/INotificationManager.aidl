@@ -152,4 +152,5 @@ interface INotificationManager
     void setMediaPlaying(boolean playing);
 
     void forceShowLedLight(int color);
+    void forcePulseLedLight(int color, int onTime, int offTime);
 }
