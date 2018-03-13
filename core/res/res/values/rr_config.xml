@@ -53,7 +53,7 @@
     </string-array>
 
     <!-- Whether device has dash charging support -->
-    <bool name="config_hasDashCharger">false</bool>
+    <bool name="config_hasDashCharger">true</bool>
 
     <bool name="config_canForceDozeNotifications">true</bool>
 
