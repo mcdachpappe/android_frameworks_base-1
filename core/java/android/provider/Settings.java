@@ -4460,6 +4460,18 @@ public final class Settings {
          */
         public static final String HEADS_UP_BLACKLIST_VALUES = "heads_up_blacklist_values";
 
+	/**
+         * Heads up timeout configuration
+         * @hide
+         */
+        public static final String HEADS_UP_TIMEOUT = "heads_up_timeout";
+
+	/**
+         * Defines the global heads up notification snooze
+         * @hide
+         */
+        public static final String HEADS_UP_NOTIFICATION_SNOOZE = "heads_up_notification_snooze";
+
         /**
          * Whether to show the notification ticker on the status bar
          * @hide
@@ -5580,6 +5592,30 @@ public final class Settings {
         public static final String INCALL_NOTIFICATIONS_VIBRATE = "incall_notifications_vibrate";
 
         /** End of ABC system settings**/
+
+	/**
+         * Enable blocking wakelock
+         * @hide
+         */
+        public static final String WAKELOCK_BLOCKING_ENABLED = "wakelock_blocking_enabled";
+
+        /**
+         * List of wakelock blocks selected
+         * @hide
+         */
+        public static final String WAKELOCK_BLOCKING_LIST = "wakelock_blocking_list";
+
+	/**
+         * List of alarms blocks selected
+         * @hide
+         */
+        public static final String ALARM_BLOCKING_LIST = "alarm_blocking_list";
+
+        /**
+         * Enable blocking alarm
+         * @hide
+         */
+        public static final String ALARM_BLOCKING_ENABLED = "alarm_blocking_enabled";
 
         /**
          * Settings to backup. This is here so that it's in the same place as the settings
