@@ -1276,7 +1276,8 @@ public class Camera {
             case CAMERA_MSG_COMPRESSED_IMAGE:
                 if (mJpegCallback != null) {
                     mJpegCallback.onPictureTaken((byte[])msg.obj, mCamera);
-                } else if(mIsOPService&&mOPServiceJpegCallback != null){
+                }
+		else if(mIsOPService&&mOPServiceJpegCallback != null){
                      Log.d(TAG,"op jpeg callback");
                      mOPServiceJpegCallback.onPictureTaken((byte[])msg.obj, mCamera);
                 }
