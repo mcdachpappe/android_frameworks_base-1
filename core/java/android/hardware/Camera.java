@@ -1383,8 +1383,8 @@ public class Camera {
                     &&mMetadata!=null) {
                     mCharacteristics = new CameraCharacteristics(new CameraMetadataNative(mMetadata));
                     CaptureResult result=new CaptureResult(new CameraMetadataNative(mMetadata),-1);
-                    mOneplusCallback.onDngMetadata(mCharacteristics, result, mCamera);                    
-                }    
+                    mOneplusCallback.onDngMetadata(mCharacteristics, result, mCamera);
+                }
             return;
             
             case CAMERA_MSG_IN_PROCESSING:
