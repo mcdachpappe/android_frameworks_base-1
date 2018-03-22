@@ -1357,11 +1357,11 @@ public class Camera {
                 return;
             /* ### QC ADD-ONS: END */
             case CAMERA_MSG_RAW_IMAGE_DUMMY:
-                Log.d(TAG,"CAMERA_MSG_RAW_IMAGE_DUMMY");
+                // Log.d(TAG,"CAMERA_MSG_RAW_IMAGE_DUMMY");
                 return;
 
             case CAMERA_MSG_AEC:
-                Log.d(TAG,"CAMERA_MSG_AEC");
+                // Log.d(TAG,"CAMERA_MSG_AEC");
                 if (mAECallback != null) {
                     int [] states=new int[2];
                     states[0]=msg.arg1;
@@ -1371,14 +1371,14 @@ public class Camera {
                 return;
                 
             case CAMERA_MSG_DNG_IMAGE:
-                Log.d(TAG,"CAMERA_MSG_DNG_IMAGE");
+                // Log.d(TAG,"CAMERA_MSG_DNG_IMAGE");
                 if (mOneplusCallback != null) {
                     mOneplusCallback.onDngImage((byte[])msg.obj, mCamera);
                 }
                 return;
                 
             case CAMERA_MSG_DNG_META_DATA:
-                Log.d(TAG,"CAMERA_MSG_DNG_META_DATA");
+                // Log.d(TAG,"CAMERA_MSG_DNG_META_DATA");
                 if (mOneplusCallback != null
                     &&mMetadata!=null) {
                     mCharacteristics = new CameraCharacteristics(new CameraMetadataNative(mMetadata));
@@ -1388,7 +1388,7 @@ public class Camera {
             return;
             
             case CAMERA_MSG_IN_PROCESSING:
-                Log.d(TAG,"CAMERA_MSG_IN_PROCESSING");
+                // Log.d(TAG,"CAMERA_MSG_IN_PROCESSING");
                 if (mProcessCallback != null) {
                     mProcessCallback.onProcess();
                 }
