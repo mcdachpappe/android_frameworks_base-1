@@ -299,7 +299,7 @@ void JNICameraContext::copyAndPost(JNIEnv* env, const sp<IMemory>& dataPtr, int 
                         return;
                     }
                 }
-            } else if(msgType == 0x40000) {
+            } else if(msgType == 0x10000) {
                 camera_metadata_t * cMetaData = reinterpret_cast<camera_metadata_t*>(heapBase + offset);
                 *mMeta_ptr=(const camera_metadata_t*)cMetaData;
                 mMeta_ptr->sort();
