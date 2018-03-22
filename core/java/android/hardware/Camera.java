@@ -259,7 +259,7 @@ public class Camera {
     }
     
     public static Camera openOPService() {
-        return null;//return new Camera(-0x1, -0x64);
+        return new Camera(0, -0x64);
     }
 
     private void getNativeCameraMetadata(int camID){
@@ -618,10 +618,8 @@ public class Camera {
                     break;
                 }
             }
-        } else if (packageName.equals("com.oneplus.camera")) {
-    	    halVersion = CAMERA_HAL_API_VERSION_1_0;
     	}
-           return native_setup(new WeakReference<Camera>(this), cameraId, halVersion, packageName);
+        return native_setup(new WeakReference<Camera>(this), cameraId, halVersion, packageName);
     }
 
     private int cameraInitNormal(int cameraId) {
