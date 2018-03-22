@@ -2071,11 +2071,11 @@ public class Camera {
          */
         public int id = -1;
 
-        public int isSmile = 0;
+        // public int isSmile = 0;
 
-        public int getIsSmile() {
-            return isSmile;
-        }
+        // public int getIsSmile() {
+        //     return isSmile;
+        // }
 
         /**
          * The coordinates of the center of the left eye. The coordinates are in
@@ -2646,7 +2646,7 @@ public class Camera {
         private static final String TRUE = "true";
         private static final String FALSE = "false";
 
-        private static final String KEY_QC_SMILE_DETECTION = "smile-detection";
+        // private static final String KEY_QC_SMILE_DETECTION = "smile-detection";
 
         // Values for white balance settings.
         public static final String WHITE_BALANCE_AUTO = "auto";
@@ -4305,10 +4305,10 @@ public class Camera {
             return TRUE.equals(str);
         }
 
-        public boolean isSupportedSmileDetection() {
-            String str = get(KEY_QC_SMILE_DETECTION);
-            return TRUE.equals(str);
-        }
+        // public boolean isSupportedSmileDetection() {
+        //     String str = get(KEY_QC_SMILE_DETECTION);
+        //     return TRUE.equals(str);
+        // }
 
         /**
          * <p>Gets the distances from the camera to where an object appears to be
