@@ -18,6 +18,7 @@ package android.hardware;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.impl.CameraMetadataNative;
 import android.hardware.camera2.CaptureResult;
+import android.hardware.camera2.CaptureRequest.Builder;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.impl.CaptureResultExtras;
 import android.hardware.camera2.CameraManager;
@@ -581,7 +582,6 @@ public class Camera {
     }
 
     private int cameraInitVersion(int cameraId, int halVersion) {
-	getNativeCameraMetadata(cameraId);
         mShutterCallback = null;
         mRawImageCallback = null;
         mJpegCallback = null;
@@ -1371,37 +1371,29 @@ public class Camera {
                     mAECallback.onAEChanged(states,mCamera);
                 }
                 return;
-                
+
             case CAMERA_MSG_DNG_IMAGE:
                 Log.d(TAG,"CAMERA_MSG_DNG_IMAGE");
                 if (mOneplusCallback != null) {
                     mOneplusCallback.onDngImage((byte[])msg.obj, mCamera);
                 }
                 return;
-                
+
             case CAMERA_MSG_DNG_META_DATA:
                 Log.d(TAG,"CAMERA_MSG_DNG_META_DATA");
                 if (mOneplusCallback != null
-                    &&mCharacteristics!=null&&mMetadata!=null) {
-
-                    /* if (true) {
-                        Log.v(TAG, "metadata:");
-                        Log.v(TAG, "--------------------------------------------------- (start)");
-                        mMetadata.dumpToLog();
-                        Log.v(TAG, "--------------------------------------------------- (end)");
-                    }*/ 
-
-                    CaptureResult result=new CaptureResult(mMetadata,-1);
+                    &&mMetadata!=null) {
+                    mCharacteristics = new CameraCharacteristics(new CameraMetadataNative(mMetadata));
+                    CaptureResult result=new CaptureResult(new CameraMetadataNative(mMetadata),-1);
                     mOneplusCallback.onDngMetadata(mCharacteristics, result, mCamera);
-                    
-                }    
+                }
             return;
-            
+
             case CAMERA_MSG_IN_PROCESSING:
                 Log.d(TAG,"CAMERA_MSG_IN_PROCESSING");
-                //if (mProcessCallback != null) {
-                //    mProcessCallback.onProcess();
-                //}
+                if (mProcessCallback != null) {
+                    mProcessCallback.onProcess();
+                }
                 return;
 
             default:
@@ -1703,14 +1695,14 @@ public class Camera {
                 mMetadataPtr = (long) ptrField.get(mMetadata);
                 }
                 catch(Exception x){
-                    
+
                 };
 
         }
-  
-        //if (mProcessCallback != null) {
-        //    msgType |= CAMERA_MSG_IN_PROCESSING;
-        //}
+
+        if (mProcessCallback != null) {
+            msgType |= CAMERA_MSG_IN_PROCESSING;
+        }
 
         native_takePicture(msgType);
         mFaceDetectionRunning = false;
