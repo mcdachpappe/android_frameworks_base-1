@@ -4264,6 +4264,14 @@ public final class Settings {
          */
         public static final String VIBRATE_ON_DISCONNECT = "vibrate_on_disconnect";
 
+	/**
+         * Whether to use the MTP by default after connecting to PC
+         * @hide
+         */
+        public static final String MTP_DIRTY_HACK = "mtp_dirty_hack";
+        /** @hide */
+        public static final String MTP_DIRTY_HACK_SAVE = "mtp_dirty_hack_save";
+
         /**
          * Whether to display the screenrecord action on power menu
          * @hide
