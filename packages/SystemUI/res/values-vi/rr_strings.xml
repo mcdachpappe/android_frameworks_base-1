@@ -17,10 +17,10 @@
  -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
   <!-- RR Tile -->
-  <string name="quick_settings_rr_label">Cấu hình</string>
+  <string name="quick_settings_rr_label">Tuỳ chỉnh</string>
   <!-- Power menu -->
   <string name="global_action_restart_advanced">Nâng cao</string>
-  <string name="global_action_restart_recovery">Chế độ phục hồi</string>
+  <string name="global_action_restart_recovery">Phục hồi</string>
   <string name="global_action_restart_bootloader">Trình nạp khởi động</string>
   <string name="global_action_restart_ui">Giao diện người dùng hệ thống</string>
   <string name="global_action_restart_hot">Nóng</string>
@@ -49,11 +49,11 @@
   <string name="accessibility_data_connection_hspap">HSPA+</string>
   <!-- SystemUI Tuner Parts -->
   <string name="systemui_tuner_icon_manager_title">Quản lý biểu tượng</string>
-  <string name="systemui_tuner_lockscreen_bottom_shortcuts_title">Các phím tắt phía dưới</string>
+  <string name="systemui_tuner_lockscreen_bottom_shortcuts_title">Phím tắt phía dưới</string>
   <string name="lockscreen_default">Mặc định</string>
   <string name="status_bar_vpn">VPN</string>
   <string name="status_bar_data_saver">Tiết kiệm dữ liệu</string>
-  <string name="lockscreen_hidden">Không có</string>
+  <string name="lockscreen_hidden">Không</string>
   <string name="custom_hint">Trượt từ biểu tượng để mở ứng dụng</string>
   <string name="systemui_tuner_navbar_title">Cài đặt gốc</string>
   <!-- QS Tiles -->
@@ -99,16 +99,18 @@
   <string name="quick_settings_sound_ring">Chuông</string>
   <string name="quick_settings_sound_vibrate">Rung</string>
   <string name="quick_settings_sound_silent">Im lặng</string>
+  <!-- Sound Search TIle -->
+  <!-- Google Assist Tiles -->
   <!-- Ambient Display Tile -->
   <string name="quick_settings_ambient_display_label">Hiển thị tương tác</string>
   <!-- Content description of the ambient display tile in quick settings when off (not shown on the screen). [CHAR LIMIT=NONE] -->
   <string name="accessibility_quick_settings_ambient_display_off">Hiển thị tương tác tắt.</string>
   <!-- Content description of the ambient display tile in quick settings when on (not shown on the screen). [CHAR LIMIT=NONE] -->
-  <string name="accessibility_quick_settings_ambient_display_on">Bật hiển thị môi trường xung quanh.</string>
+  <string name="accessibility_quick_settings_ambient_display_on">Ambient display bật.</string>
   <!-- Announcement made when ambient display changes to off (not shown on the screen). [CHAR LIMIT=NONE] -->
-  <string name="accessibility_quick_settings_ambient_display_changed_off">Hiển thị môi trường xung quanh đã tắt.</string>
+  <string name="accessibility_quick_settings_ambient_display_changed_off">Ambient display đã tắt.</string>
   <!-- Announcement made when ambient display changes to on (not shown on the screen). [CHAR LIMIT=NONE] -->
-  <string name="accessibility_quick_settings_ambient_display_changed_on">Hiển thị môi trường xung quanh đã bật.</string>
+  <string name="accessibility_quick_settings_ambient_display_changed_on">Ambient display đã bật.</string>
   <!-- Caffeine QS Tile -->
   <string name="quick_settings_caffeine_label">Caffeine</string>
   <string name="accessibility_quick_settings_caffeine_off">Caffeine tắt</string>
@@ -123,7 +125,7 @@
   <string name="accessibility_quick_settings_volume_panel">Âm lượng</string>
   <string name="quick_settings_volume_panel_label">Âm lượng</string>
   <!-- PiP Tile -->
-  <string name="quick_settings_pip_label">PiP</string>
+  <string name="quick_settings_pip_label">Picture in Picture</string>
   <string name="quick_settings_pip_tile_app_na">Ứng dụng không hỗ trợ PiP</string>
   <!-- Screenrecord tile -->
   <string name="quick_settings_screenrecord">Quay màn hình</string>
@@ -187,10 +189,11 @@
   <string name="recents_custom_android_n">XÓA TẤT CẢ</string>
   <!-- Indication on the keyguard that is shown when the device is charging with a turbo power charger. Should match keyguard_plugged_in_turbo_power_charging [CHAR LIMIT=40]-->
   <string name="keyguard_indication_turbo_power_time">TurboPower đã kết nối (<xliff:g id="charging_time_left">%s</xliff:g> cho đến khi đầy)</string>
-  <string name="keyguard_plugged_in_turbo_power_charging">TurboPower đã kết nối</string>
+  <string name="keyguard_plugged_in_turbo_power_charging">Đã kết nối TurboPower</string>
   <!-- Kill button in notification guts -->
   <string name="force_stop_dlg_title">Buộc dừng?</string>
   <string name="force_stop_dlg_text">Nếu bạn bắt buộc đóng một ứng dụng, nó có thể hoạt động sai.</string>
   <string name="kill">Đóng Ứng Dụng</string>
   <!-- Recents free RAM -->
+  <string name="recents_free_ram">Ram trống: %1$dMB</string>
 </resources>

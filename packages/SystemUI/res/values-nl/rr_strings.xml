@@ -99,6 +99,8 @@
   <string name="quick_settings_sound_ring">Rinkelen</string>
   <string name="quick_settings_sound_vibrate">Trillen</string>
   <string name="quick_settings_sound_silent">Stil</string>
+  <!-- Sound Search TIle -->
+  <!-- Google Assist Tiles -->
   <!-- Ambient Display Tile -->
   <string name="quick_settings_ambient_display_label">Actieve display</string>
   <!-- Content description of the ambient display tile in quick settings when off (not shown on the screen). [CHAR LIMIT=NONE] -->
@@ -193,4 +195,5 @@
   <string name="force_stop_dlg_text">Als je een app gedwongen stopt, kan deze onverwacht gedrag vertonen.</string>
   <string name="kill">App Beëindigen</string>
   <!-- Recents free RAM -->
+  <string name="recents_free_ram">Vrij RAM-geheugen: %1$d MB</string>
 </resources>
