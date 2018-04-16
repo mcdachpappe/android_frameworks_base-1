@@ -100,7 +100,11 @@
   <string name="quick_settings_sound_vibrate">Wibracje</string>
   <string name="quick_settings_sound_silent">Wyciszenie</string>
   <!-- Sound Search TIle -->
+  <string name="quick_settings_sound_search">Wyszukiwanie dźwięku</string>
   <!-- Google Assist Tiles -->
+  <string name="quick_settings_google_assist_label">Asystent</string>
+  <string name="quick_settings_google_voice_assist_label">Asystent głosowy</string>
+  <string name="quick_settings_google_now_label">Google Feed</string>
   <!-- Ambient Display Tile -->
   <string name="quick_settings_ambient_display_label">Ekran dostosowany do otoczenia</string>
   <!-- Content description of the ambient display tile in quick settings when off (not shown on the screen). [CHAR LIMIT=NONE] -->
@@ -158,7 +162,7 @@
   <string name="quick_settings_screenrecord_hq_label">Nagrywanie ekranu HQ</string>
   <!-- Navigation bar Tile -->
   <string name="quick_settings_navigation_bar">Pasek nawigacji</string>
-  <string name="quick_settings_smartbar">SmartBar</string>
+  <string name="quick_settings_smartbar">Pasek Smart</string>
   <string name="quick_settings_fling">Gesty</string>
   <string name="quick_settings_navigation_default">Standardowy</string>
   <string name="quick_settings_navigation_disabled">Wyłączony</string>
