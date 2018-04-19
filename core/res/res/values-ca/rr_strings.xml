@@ -18,17 +18,17 @@
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
   <!-- Power menu (legacy) -->
   <string name="reboot_title">Reiniciar</string>
-  <string name="reboot_message">Sistèma de reinici</string>
+  <string name="reboot_message">Reiniciant el sistema</string>
   <!-- [CHAR LIMIT=NONE] Title of an application permission, listed so the user can choose whether they want to allow the application to do this. -->
   <string name="permlab_toggleNavigationEditor">editor del control de navegació</string>
   <!-- [CHAR LIMIT=NONE] Description of an application permission, listed so the user can choose whether they want to allow the application to do this. -->
   <string name="permdesc_toggleNavigationEditor">Permetre una aplicació controlar l\'editor de la barra de navegació.</string>
   <!-- AOKP custom system animations -->
   <string name="animation_fade">Esfumar-se</string>
-  <string name="animation_slide_right">Lliscar des de la dreta</string>
-  <string name="animation_slide_left">Lliscar des de l\'esquerra</string>
-  <string name="animation_slide_right_no_fade">Lliscar des de la dreta (Sense esvaïment)</string>
-  <string name="animation_slide_left_no_fade">Lliscament des de l\'esquerra (sense esvaïment)</string>
+  <string name="animation_slide_right">Lliscar a la dreta</string>
+  <string name="animation_slide_left">Lliscar a l\'esquerra</string>
+  <string name="animation_slide_right_no_fade">Lliscar a la dreta (Sense esvaïment)</string>
+  <string name="animation_slide_left_no_fade">Lliscar a l\'esquerra (Sense esvaïment)</string>
   <string name="animation_slide_up">Lliscament cap a sota</string>
   <string name="animation_slide_down">Lliscament cap a dalt</string>
   <string name="animation_default">Per defecte</string>
@@ -44,7 +44,7 @@
   <!-- On-The-Go -->
   <string name="global_action_onthego">Mode On-The-Go</string>
   <!-- Pocket Lock -->
-  <string name="pocket_lock_message_long_press">Manté el botó d\'engegada per interactuar</string>
+  <string name="pocket_lock_message_long_press">Manteniu premut el botó d\'engegada per interactuar</string>
   <!-- Label for item that flashlight in power menu options dialog -->
   <string name="global_action_flashlight">Llanterna</string>
 </resources>

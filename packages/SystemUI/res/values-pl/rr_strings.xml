@@ -23,7 +23,7 @@
   <string name="global_action_restart_recovery">Tryb recovery</string>
   <string name="global_action_restart_bootloader">Bootloader</string>
   <string name="global_action_restart_ui">SystemUI</string>
-  <string name="global_action_restart_hot">Gorący restart</string>
+  <string name="global_action_restart_hot">Szybki restart</string>
   <string name="global_action_screenshot">Zrzut ekranu</string>
   <!-- Screenshot Delete Toast -->
   <string name="delete_screenshot_toast">Zrzut ekranu usunięty</string>
@@ -99,6 +99,12 @@
   <string name="quick_settings_sound_ring">Dzwonek</string>
   <string name="quick_settings_sound_vibrate">Wibracje</string>
   <string name="quick_settings_sound_silent">Wyciszenie</string>
+  <!-- Sound Search TIle -->
+  <string name="quick_settings_sound_search">Wyszukiwanie dźwięku</string>
+  <!-- Google Assist Tiles -->
+  <string name="quick_settings_google_assist_label">Asystent</string>
+  <string name="quick_settings_google_voice_assist_label">Asystent głosowy</string>
+  <string name="quick_settings_google_now_label">Google Feed</string>
   <!-- Ambient Display Tile -->
   <string name="quick_settings_ambient_display_label">Ekran dostosowany do otoczenia</string>
   <!-- Content description of the ambient display tile in quick settings when off (not shown on the screen). [CHAR LIMIT=NONE] -->
@@ -123,8 +129,8 @@
   <string name="accessibility_quick_settings_volume_panel">Głośność</string>
   <string name="quick_settings_volume_panel_label">Głośność</string>
   <!-- PiP Tile -->
-  <string name="quick_settings_pip_label">PiP</string>
-  <string name="quick_settings_pip_tile_app_na">Aplikacja nie obsługuje PiP</string>
+  <string name="quick_settings_pip_label">Obraz w Obrazie</string>
+  <string name="quick_settings_pip_tile_app_na">Aplikacja nie obsługuje trybu Obraz w Obrazie</string>
   <!-- Screenrecord tile -->
   <string name="quick_settings_screenrecord">Nagrywanie ekranu</string>
   <string name="quick_settings_screenrecord_on">Nagrywanie...</string>
@@ -151,12 +157,12 @@
   <string name="screenrecord_show_hint">Pokaż wskazówkę</string>
   <!-- Screenshot QS tile -->
   <string name="quick_settings_screenrecord_label">Nagrywanie ekranu</string>
-  <string name="quick_settings_screenrecord_lq_label">Nagrywanie ekranu</string>
+  <string name="quick_settings_screenrecord_lq_label">Nagrywanie ekranu LQ</string>
   <string name="quick_settings_screenrecord_mq_label">Nagrywanie ekranu MQ</string>
   <string name="quick_settings_screenrecord_hq_label">Nagrywanie ekranu HQ</string>
   <!-- Navigation bar Tile -->
   <string name="quick_settings_navigation_bar">Pasek nawigacji</string>
-  <string name="quick_settings_smartbar">SmartBar</string>
+  <string name="quick_settings_smartbar">Pasek Smart</string>
   <string name="quick_settings_fling">Gesty</string>
   <string name="quick_settings_navigation_default">Standardowy</string>
   <string name="quick_settings_navigation_disabled">Wyłączony</string>
@@ -193,4 +199,5 @@
   <string name="force_stop_dlg_text">Jeśli wymusisz zatrzymanie aplikacji, może działać nieprawidłowo.</string>
   <string name="kill">Zabij aplikację</string>
   <!-- Recents free RAM -->
+  <string name="recents_free_ram">Wolna pamięć RAM: %1$d MB</string>
 </resources>

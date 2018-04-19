@@ -5626,6 +5626,38 @@ public final class Settings {
         public static final String ALARM_BLOCKING_ENABLED = "alarm_blocking_enabled";
 
         /**
+         * Ticker animation
+         * 0: Fade animation
+         * 1: Scrolling ticker
+         */
+        public static final String STATUS_BAR_TICKER_ANIMATION_MODE =
+                "status_bar_ticker_animation_mode";
+
+       /**
+        * Whether to show battery percent on ambient bottom
+        * @hide
+        */
+        public static final String AMBIENT_BATTERY_PERCENT = "ambient_battery_percent";
+
+        /**
+         * Color of toast message icon
+         * @hide
+         */
+        public static final String TOAST_ICON_COLOR = "toast_icon_color";
+
+        /**
+         * Color of toast message test
+         * @hide
+         */
+        public static final String TOAST_TEXT_COLOR = "toast_text_color";
+
+        /**
+         * Whether to change the transparency of the qs panel
+         * @hide
+         */
+        public static final String QS_PANEL_BG_ALPHA = "qs_panel_bg_alpha";
+
+        /**
          * Settings to backup. This is here so that it's in the same place as the settings
          * keys and easy to update.
          *
@@ -7242,6 +7274,20 @@ public final class Settings {
          * @hide
          */
         public static final String FLING_PULSE_LAVALAMP_SPEED = "fling_pulse_lavalamp_speed";
+
+        /**
+         * Fling pulse lavalamp start and end colors
+         *
+         * @hide
+         */
+        public static final String FLING_PULSE_LAVALAMP_COLOR_FROM = "fling_lavalamp_color_from";
+
+        /**
+         * Fling pulse lavalamp start and end colors
+         *
+         * @hide
+         */
+        public static final String FLING_PULSE_LAVALAMP_COLOR_TO = "fling_lavalamp_color_to";
 
         /**
          * Pulse renderer implementation
@@ -9263,12 +9309,20 @@ public final class Settings {
          * 3: Display the battery as a dotted circle
          * 4: Display the battery as a big circle and show level into the icon
          * 5: Display the battery as a big dotted circle and show level into the icon
-         * 6: Display the battery as text
-         * 7: Do not display the battery
+         * 6: Display the battery as a square
+         * 7: Display the battery as text
+         * 8: Do not display the battery
          * default: 0
          * @hide
          */
         public static final String STATUS_BAR_BATTERY_STYLE = "status_bar_battery_style";
+
+        /**
+         * Force authorize Substratum (or equivalent) frontend calling packages by ThemeInterfacer
+         * The value is boolean (1 or 0).
+         * @hide
+         */
+        public static final String FORCE_AUTHORIZE_SUBSTRATUM_PACKAGES = "force_authorize_substratum_packages";
 
         /**
          * This are the settings to be backed up.
