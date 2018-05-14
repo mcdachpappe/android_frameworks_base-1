@@ -24,13 +24,16 @@ import android.provider.Settings;
 import android.view.View;
 import android.widget.Toast;
 
+import com.android.systemui.plugins.qs.QSTile.BooleanState;
+import com.android.systemui.qs.GlobalSetting;
+import com.android.systemui.qs.QSHost;
+import com.android.systemui.qs.tileimpl.QSTileImpl;
 import com.android.systemui.R;
 import com.android.systemui.SysUIToast;
-import com.android.systemui.qs.QSTile;
 
 import com.android.internal.logging.MetricsProto.MetricsEvent;
 
-public class HighBrightnessTile extends QSTile<QSTile.BooleanState> {
+public class HighBrightnessTile extends QSTileImpl<BooleanState> {
 
     public static final String HIGH_BRIGHTNESS_MODE = "high_brightness_mode";
     private static final int HIGH_BRIGHTNESS_MODE_OFF = 0;
@@ -82,7 +85,7 @@ public class HighBrightnessTile extends QSTile<QSTile.BooleanState> {
 
     @Override
     public int getMetricsCategory() {
-        return MetricsEvent.DISPLAY;
+        return MetricsEvent.RESURRECTED;
     }
 
     @Override
