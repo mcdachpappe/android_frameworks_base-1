@@ -2890,7 +2890,7 @@ public class SettingsProvider extends ContentProvider {
         }
 
         private final class UpgradeController {
-            private static final int SETTINGS_VERSION = 148;
+            private static final int SETTINGS_VERSION = 149;
 
             private final int mUserId;
 
@@ -3469,6 +3469,17 @@ public class SettingsProvider extends ContentProvider {
                         }
                     }
                     currentVersion = 148;
+                }
+
+                if (currentVersion == 148) {
+                    // v149: Add high brightness mode setting.
+                    SettingsState secureSettings = getSecureSettingsLocked(userId);
+                    secureSettings.insertSettingLocked(Settings.Secure.HIGH_BRIGHTNESS_MODE,
+                            getContext().getResources().getBoolean(
+                                    R.bool.def_high_brightness_Mode) ? "1" : "0",
+                            SettingsState.SYSTEM_PACKAGE_NAME);
+
+                    currentVersion = 149;
                 }
 
                 // vXXX: Add new settings above this point.
