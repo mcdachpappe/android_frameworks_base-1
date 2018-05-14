@@ -9505,6 +9505,7 @@ public final class Settings {
             MOUNT_UMS_NOTIFY_ENABLED,
             SLEEP_TIMEOUT,
             DOUBLE_TAP_TO_WAKE,
+	    HIGH_BRIGHTNESS_MODE,
             WAKE_GESTURE_ENABLED,
             LONG_PRESS_TIMEOUT,
             CAMERA_GESTURE_DISABLED,
