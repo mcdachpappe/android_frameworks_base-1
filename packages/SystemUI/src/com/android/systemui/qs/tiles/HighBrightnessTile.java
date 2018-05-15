@@ -21,6 +21,8 @@ import android.database.ContentObserver;
 import android.net.Uri;
 import android.os.UserHandle;
 import android.provider.Settings;
+import android.provider.Settings.Secure;
+import android.service.quicksettings.Tile;
 import android.view.View;
 import android.widget.Toast;
 
@@ -40,7 +42,7 @@ public class HighBrightnessTile extends QSTileImpl<BooleanState> {
     private static final int HIGH_BRIGHTNESS_MODE_ON = 1;
     private static final int DEFAULT_HIGH_BRIGHTNESS_MODE = 0;
 
-    public HighBrightnessTile(Host host) {
+    public HighBrightnessTile(QSHost host) {
         super(host);
     }
 
