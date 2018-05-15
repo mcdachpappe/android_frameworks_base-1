@@ -70,16 +70,17 @@ import com.android.systemui.qs.tiles.WifiTile;
 import com.android.systemui.qs.tiles.WorkModeTile;
 import com.android.systemui.qs.QSTileHost;
 
-private final boolean mHighBrightnessSupported;
-
 public class QSFactoryImpl implements QSFactory {
 
     private static final String TAG = "QSFactory";
     private final QSTileHost mHost;
+    private final Context mContext;
+    private final boolean mHighBrightnessSupported;
 
-    public QSFactoryImpl(QSTileHost host) {
-        mHighBrightnessSupported = mContext.getResources().getBoolean(com.android.internal.R.bool.config_supportHighBrightness);
+    public QSFactoryImpl(QSTileHost host, Context context) {
         mHost = host;
+        mContext = context;
+        mHighBrightnessSupported = mContext.getResources().getBoolean(com.android.internal.R.bool.config_supportHighBrightness);
     }
 
     public QSTile createTile(String tileSpec) {
