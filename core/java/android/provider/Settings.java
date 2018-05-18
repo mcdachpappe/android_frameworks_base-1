@@ -4121,6 +4121,18 @@ public final class Settings {
          */
         public static final String POWERMENU_FLASHLIGHT = "powermenu_flashlight";
 
+	/**
+         * Select which lockscreen date style to display
+         * @hide
+         */
+        public static final String LOCKSCREEN_DATE_SELECTION = "lockscreen_date_selection";
+
+        /**
+         * Select which lockscreen clock style to display
+         * @hide
+         */
+        public static final String LOCKSCREEN_CLOCK_SELECTION = "lockscreen_clock_selection";
+
         /**
          * Whether to display the wallpaper tint on the power menu
          * @hide
@@ -4128,7 +4140,7 @@ public final class Settings {
         public static final String WALLPAPER_POWER_MENU_TINT = "wallpaper_power_menu_tint";
 
         /**
-         * Whether to display the wallpaper tint in recents
+	 * Whether to display the wallpaper tint in recents
          * @hide
          */
         public static final String WALLPAPER_RECENTS_TINT = "wallpaper_recents_tint";
