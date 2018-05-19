@@ -23,6 +23,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.CountDownTimer;
 import android.os.PowerManager;
+import android.provider.Settings;
 import android.os.SystemClock;
 import android.service.quicksettings.Tile;
 
