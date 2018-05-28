@@ -754,9 +754,6 @@ public class KeyguardStatusView extends GridLayout implements
 	final Resources res = getContext().getResources();
         View weatherPanel = findViewById(R.id.weather_panel);
         TextView noWeatherInfo = (TextView) findViewById(R.id.no_weather_info_text);
-	    
-	int primaryTextColor =
-                res.getColor(R.color.keyguard_default_primary_text_color);
 
 	if (dateFont == 0) {
             mDateView.setTypeface(Typeface.create("sans-serif", Typeface.NORMAL));
@@ -1057,26 +1054,6 @@ public class KeyguardStatusView extends GridLayout implements
         }
         if (lockClockFont == 29) {
             mClockView.setTypeface(Typeface.create("themeable-sys", Typeface.NORMAL));
-        }
-    }
-
-    private void updateClockColor() {
-        ContentResolver resolver = getContext().getContentResolver();
-        int color = Settings.System.getInt(resolver,
-                Settings.System.LOCKSCREEN_CLOCK_COLOR, 0xFFFFFFFF);
-
-        if (mClockView != null) {
-            mClockView.setTextColor(color);
-        }
-    }
-
-    private void updateClockDateColor() {
-        ContentResolver resolver = getContext().getContentResolver();
-        int color = Settings.System.getInt(resolver,
-                Settings.System.LOCKSCREEN_CLOCK_DATE_COLOR, 0xFFFFFFFF);
-
-        if (mDateView != null) {
-            mDateView.setTextColor(color);
         }
     }
 
