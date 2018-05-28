@@ -249,6 +249,7 @@ public class KeyguardStatusView extends GridLayout implements
         layoutParams.bottomMargin = getResources().getDimensionPixelSize(
                 R.dimen.bottom_text_spacing_digital);
         mClockView.setLayoutParams(layoutParams);
+	mClockView.setTypeface(Typeface.create("sans-serif", Typeface.NORMAL));
 
 	// Custom analog clock
         MarginLayoutParams customlayoutParams = (MarginLayoutParams) mAnalogClockView.getLayoutParams();
@@ -281,7 +282,7 @@ public class KeyguardStatusView extends GridLayout implements
 
     private int getLockClockFont() {
         return Settings.System.getInt(mContext.getContentResolver(),
-                Settings.System.LOCK_CLOCK_FONTS, 26);
+                Settings.System.LOCK_CLOCK_FONTS, 4);
     }
 
     public void refreshTime() {
@@ -309,6 +310,7 @@ public class KeyguardStatusView extends GridLayout implements
 
         refreshTime();
         refreshAlarmStatus(nextAlarm);
+	refreshLockFont();
         updateSettings(false);
     }
 
@@ -821,6 +823,64 @@ public class KeyguardStatusView extends GridLayout implements
     @Override
     public void weatherError(int errorReason) {
         if (DEBUG) Log.d(TAG, "weatherError " + errorReason);
+    }
+
+    private void refreshLockFont() {
+        final Resources res = getContext().getResources();
+        boolean isPrimary = UserHandle.getCallingUserId() == UserHandle.USER_OWNER;
+        int lockClockFont = isPrimary ? getLockClockFont() : 0;
+
+        if (lockClockFont == 0) {
+            mClockView.setTypeface(Typeface.create("sans-serif", Typeface.NORMAL));
+        }
+        if (lockClockFont == 1) {
+            mClockView.setTypeface(Typeface.create("sans-serif", Typeface.BOLD));
+        }
+        if (lockClockFont == 2) {
+            mClockView.setTypeface(Typeface.create("sans-serif", Typeface.ITALIC));
+        }
+        if (lockClockFont == 3) {
+            mClockView.setTypeface(Typeface.create("sans-serif", Typeface.BOLD_ITALIC));
+        }
+        if (lockClockFont == 4) {
+            mClockView.setTypeface(Typeface.create("sans-serif-light", Typeface.ITALIC));
+        }
+        if (lockClockFont == 5) {
+            mClockView.setTypeface(Typeface.create("sans-serif-thin", Typeface.ITALIC));
+        }
+        if (lockClockFont == 6) {
+            mClockView.setTypeface(Typeface.create("sans-serif-condensed", Typeface.NORMAL));
+        }
+        if (lockClockFont == 7) {
+            mClockView.setTypeface(Typeface.create("sans-serif-condensed", Typeface.ITALIC));
+        }
+        if (lockClockFont == 8) {
+            mClockView.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
+        }
+        if (lockClockFont == 9) {
+            mClockView.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD_ITALIC));
+        }
+        if (lockClockFont == 10) {
+            mClockView.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        }
+        if (lockClockFont == 11) {
+            mClockView.setTypeface(Typeface.create("sans-serif-medium", Typeface.ITALIC));
+        }
+	if (lockClockFont == 12) {
+            mClockView.setTypeface(Typeface.create("gobold-light-sys", Typeface.NORMAL));
+        }
+        if (lockClockFont == 13) {
+            mClockView.setTypeface(Typeface.create("roadrage-sys", Typeface.NORMAL));
+        }
+        if (lockClockFont == 14) {
+            mClockView.setTypeface(Typeface.create("snowstorm-sys", Typeface.NORMAL));
+        }
+        if (lockClockFont == 15) {
+            mClockView.setTypeface(Typeface.create("googlesans-sys", Typeface.NORMAL));
+        }
+        if (lockClockFont == 16) {
+            mClockView.setTypeface(Typeface.create("themeable-sys", Typeface.NORMAL));
+        }
     }
 
     // DateFormat.getBestDateTimePattern is extremely expensive, and refresh is called often.
