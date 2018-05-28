@@ -24,6 +24,7 @@ import android.content.ContentResolver;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.database.ContentObserver;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.Typeface;
@@ -89,6 +90,10 @@ public class KeyguardStatusView extends GridLayout implements
     private View mKeyguardStatusArea;
     private Runnable mPendingMarqueeStart;
     private Handler mHandler;
+    //On the first boot, keygard will start to receiver TIME_TICK intent.
+    //And onScreenTurnedOff will not get called if power off when keyguard is not started.
+    //Set initial value to false to skip the above case.
+    private boolean mEnableRefresh = false;
 
     private View[] mVisibleInDoze;
     private boolean mPulsing;
@@ -96,6 +101,9 @@ public class KeyguardStatusView extends GridLayout implements
     private int mTextColor;
     private int mDateTextColor;
     private int mAlarmTextColor;
+    private int mLockClockFontSize;
+    private int mLockDateFontSize;
+    private int dateFont;
 
     private View mWeatherView;
     private TextView mWeatherCity;
@@ -115,6 +123,7 @@ public class KeyguardStatusView extends GridLayout implements
     private boolean mForcedMediaDoze;
 
     private boolean mShowAlarm;
+    private boolean mAvailableAlarm;
     private boolean mShowClock;
     private boolean mShowDate;
     private int mClockSelection;
@@ -126,7 +135,9 @@ public class KeyguardStatusView extends GridLayout implements
 
         @Override
         public void onTimeChanged() {
+            if (mEnableRefresh) {
             refresh();
+            }
         }
 
         @Override
@@ -135,23 +146,28 @@ public class KeyguardStatusView extends GridLayout implements
                 if (DEBUG) Slog.v(TAG, "refresh statusview showing:" + showing);
                 refresh();
                 updateOwnerInfo();
+		refreshLockFont();
             }
         }
 
         @Override
         public void onStartedWakingUp() {
             setEnableMarquee(true);
+	    mEnableRefresh = true;
+            refresh();
         }
 
         @Override
         public void onFinishedGoingToSleep(int why) {
             setEnableMarquee(false);
+	    mEnableRefresh = false;
         }
 
         @Override
         public void onUserSwitchComplete(int userId) {
             refresh();
             updateOwnerInfo();
+	    refreshLockFont();
         }
     };
 
@@ -217,6 +233,9 @@ public class KeyguardStatusView extends GridLayout implements
         mTextColor = mClockView.getCurrentTextColor();
         mDateTextColor = mDateView.getCurrentTextColor();
         mAlarmTextColor = mAlarmStatusView.getCurrentTextColor();
+
+	updateSettings();
+
         mWeatherView = findViewById(R.id.keyguard_weather_view);
         mWeatherCity = (TextView) findViewById(R.id.city);
         mWeatherConditionImage = (ImageView) findViewById(R.id.weather_image);
@@ -227,6 +246,7 @@ public class KeyguardStatusView extends GridLayout implements
         setEnableMarquee(shouldMarquee);
         refresh();
         updateOwnerInfo();
+	refreshLockFont();
 
         // Disable elegant text height because our fancy colon makes the ymin value huge for no
         // reason.
@@ -247,6 +267,7 @@ public class KeyguardStatusView extends GridLayout implements
         layoutParams.bottomMargin = getResources().getDimensionPixelSize(
                 R.dimen.bottom_text_spacing_digital);
         mClockView.setLayoutParams(layoutParams);
+	mClockView.setTypeface(Typeface.create("sans-serif", Typeface.NORMAL));
 
 	// Custom analog clock
         MarginLayoutParams customlayoutParams = (MarginLayoutParams) mAnalogClockView.getLayoutParams();
@@ -259,11 +280,8 @@ public class KeyguardStatusView extends GridLayout implements
         deadpoollayoutParams.bottomMargin = getResources().getDimensionPixelSize(
                 R.dimen.bottom_text_spacing_digital);
         mDeadPoolClockView.setLayoutParams(deadpoollayoutParams);
-
-        // DateView
-        mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
-                getResources().getDimensionPixelSize(R.dimen.widget_label_font_size));
-	mDateView.setTypeface(tf);
+	updateclocksize();
+        refreshdatesize();
 
 	// OwnerInfo
         if (mOwnerInfo != null) {
@@ -272,6 +290,11 @@ public class KeyguardStatusView extends GridLayout implements
 	    mOwnerInfo.setTypeface(tf);
         }
 	mAlarmStatusView.setTypeface(tf);
+    }
+
+    private int getLockClockFont() {
+        return Settings.System.getInt(mContext.getContentResolver(),
+                Settings.System.LOCK_CLOCK_FONTS, 4);
     }
 
     public void refreshTime() {
@@ -295,11 +318,11 @@ public class KeyguardStatusView extends GridLayout implements
     private void refresh() {
         AlarmManager.AlarmClockInfo nextAlarm =
                 mAlarmManager.getNextAlarmClock(UserHandle.USER_CURRENT);
-        Patterns.update(mContext, nextAlarm != null);
+        Patterns.update(mContext, nextAlarm != null && mShowAlarm);
 
         refreshTime();
         refreshAlarmStatus(nextAlarm);
-        updateSettings(false);
+	refreshLockFont();
     }
 
     void refreshAlarmStatus(AlarmManager.AlarmClockInfo nextAlarm) {
@@ -308,14 +331,20 @@ public class KeyguardStatusView extends GridLayout implements
             mAlarmStatusView.setText(alarm);
             mAlarmStatusView.setContentDescription(
                     getResources().getString(R.string.keyguard_accessibility_next_alarm, alarm));
-            mAlarmStatusView.setVisibility(!isDozeMode() ? (mShowAlarm ? View.VISIBLE : View.GONE) : View.VISIBLE);
+            mAvailableAlarm = true;
         } else {
-            mAlarmStatusView.setVisibility(View.GONE);
+            mAvailableAlarm = false;
         }
+	mAlarmStatusView.setVisibility(mDarkAmount != 1 ? (mShowAlarm && mAvailableAlarm ? View.VISIBLE : View.GONE)
+                : mAvailableAlarm ? View.VISIBLE : View.GONE);
     }
 
     public int getClockBottom() {
         return mKeyguardStatusArea.getBottom();
+    }
+
+    public int getClockSelection() {
+        return mClockSelection;
     }
 
     public float getClockTextSize() {
@@ -379,6 +408,7 @@ public class KeyguardStatusView extends GridLayout implements
         }
         return info;
     }
+
     @Override
     public void weatherUpdated() {
         queryAndUpdateWeather();
@@ -394,14 +424,14 @@ public class KeyguardStatusView extends GridLayout implements
                         mWeatherClient.getWeatherConditionImage(mWeatherData.conditionCode));
                     mWeatherCurrentTemp.setText(mWeatherData.temp + mWeatherData.tempUnits);
                     mWeatherConditionText.setText(mWeatherData.condition);
-                    updateSettings(false);
+                    updateSettings();
                 } else {
                     mWeatherCity.setText(null);
                     mWeatherConditionImage.setImageDrawable(mContext
                         .getResources().getDrawable(R.drawable.keyguard_weather_default_off));
                     mWeatherCurrentTemp.setText(null);
                     mWeatherConditionText.setText(null);
-                    updateSettings(true);
+                    updateSettings();
                 }
        } catch(Exception e) {
           // Do nothing
@@ -413,11 +443,441 @@ public class KeyguardStatusView extends GridLayout implements
         return false;
     }
 
-    private void updateSettings(boolean forceHide) {
+    public void updateclocksize() {
+        int size = mLockClockFontSize;
+        if (size == 50) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_50));
+        } else if (size == 51) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_51));
+        } else if (size == 52) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_52));
+        } else if (size == 53) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_53));
+        } else if (size == 54) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_54));
+        } else if (size == 55) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_55));
+        } else if (size == 56) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_56));
+        } else if (size == 57) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_57));
+        } else if (size == 58) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_58));
+        } else if (size == 59) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_59));
+        } else if (size == 60) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_60));
+        } else if (size == 61) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_61));
+        } else if (size == 62) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_62));
+        } else if (size == 63) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_63));
+        } else if (size == 64) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_64));
+        } else if (size == 65) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_65));
+        } else if (size == 66) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_66));
+        } else if (size == 66) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_67));
+        } else if (size == 68) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_68));
+        } else if (size == 69) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_69));
+        } else if (size == 70) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_70));
+        } else if (size == 71) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_71));
+        } else if (size == 72) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_72));
+        } else if (size == 73) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_73));
+        } else if (size == 74) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_74));
+        } else if (size == 75) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_75));
+        } else if (size == 76) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_76));
+        } else if (size == 77) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_77));
+        } else if (size == 78) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.widget_big_font_size));
+        } else if (size == 79) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_79));
+        } else if (size == 80) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_80));
+        } else if (size == 81) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_81));
+        } else if (size == 82) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_82));
+        } else if (size == 83) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_83));
+        } else if (size == 84) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_84));
+        }  else if (size == 85) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_85));
+        } else if (size == 86) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_86));
+        } else if (size == 87) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_87));
+         } else if (size == 88) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_88));
+        } else if (size == 89) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_89));
+         } else if (size == 90) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_90));
+        } else if (size == 91) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_91));
+        } else if (size == 92) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_92));
+        }  else if (size == 93) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_93));
+        } else if (size == 94) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_94));
+        } else if (size == 95) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_95));
+         } else if (size == 96) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_96));
+        } else if (size == 97) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_97));
+         } else if (size == 98) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_98));
+        } else if (size == 99) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_99));
+         } else if (size == 100) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_100));
+        } else if (size == 101) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_101));
+        } else if (size == 102) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_102));
+        }  else if (size == 103) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_103));
+        } else if (size == 104) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_104));
+        } else if (size == 105) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_105));
+         } else if (size == 106) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_106));
+        } else if (size == 107) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_107));
+         } else if (size == 108) {
+        mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_clock_font_size_108));
+         }
+    }
+
+    public void refreshdatesize() {
+    int size = mLockDateFontSize;
+        if (size == 0) {
+        mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_date_font_size_1));
+        } else if (size == 1) {
+        mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_date_font_size_1));
+        } else if (size == 2) {
+        mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_date_font_size_2));
+        } else if (size == 3) {
+        mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_date_font_size_3));
+        } else if (size == 4) {
+        mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_date_font_size_4));
+        } else if (size == 5) {
+        mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_date_font_size_5));
+        } else if (size == 6) {
+        mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_date_font_size_6));
+        } else if (size == 7) {
+        mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_date_font_size_7));
+        } else if (size == 8) {
+        mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_date_font_size_8));
+        } else if (size == 9) {
+        mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_date_font_size_9));
+        } else if (size == 10) {
+        mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_date_font_size_10));
+        } else if (size == 11) {
+        mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_date_font_size_11));
+        } else if (size == 12) {
+        mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_date_font_size_12));
+        } else if (size == 13) {
+        mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_date_font_size_13));
+        } else if (size == 14) {
+        mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.widget_label_font_size));
+        }  else if (size == 15) {
+        mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_date_font_size_15));
+        } else if (size == 16) {
+        mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_date_font_size_16));
+        } else if (size == 17) {
+        mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_date_font_size_17));
+        } else if (size == 18) {
+        mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_date_font_size_18));
+        } else if (size == 19) {
+        mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_date_font_size_19));
+        } else if (size == 20) {
+        mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_date_font_size_20));
+        } else if (size == 21) {
+        mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_date_font_size_21));
+        } else if (size == 22) {
+        mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_date_font_size_22));
+        } else if (size == 23) {
+        mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_date_font_size_23));
+        } else if (size == 24) {
+        mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_date_font_size_24));
+        } else if (size == 25) {
+        mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getResources().getDimensionPixelSize(R.dimen.lock_date_font_size_25));
+        }
+    }
+
+    private void updateVisibilities() {
+	switch (mClockSelection) {
+            case 0: // default digital
+            default:
+                mClockView.setVisibility(mDarkAmount != 1 ? (mShowClock ? View.VISIBLE : View.GONE) : View.VISIBLE);
+                mAnalogClockView.setVisibility(View.GONE);
+                mDeadPoolClockView.setVisibility(View.GONE);
+                break;
+            case 1: // digital (bold)
+                mClockView.setVisibility(mDarkAmount != 1 ? (mShowClock ? View.VISIBLE : View.GONE) : View.VISIBLE);
+                mAnalogClockView.setVisibility(View.GONE);
+                mDeadPoolClockView.setVisibility(View.GONE);
+                break;
+            case 2: // analog
+                mAnalogClockView.setVisibility(mDarkAmount != 1 ? (mShowClock ? View.VISIBLE : View.GONE) : View.VISIBLE);
+                mClockView.setVisibility(View.GONE);
+                mDeadPoolClockView.setVisibility(View.GONE);
+                break;
+            case 3: // analog (deadpool)
+                mDeadPoolClockView.setVisibility(mDarkAmount != 1 ? (mShowClock ? View.VISIBLE : View.GONE) : View.VISIBLE);
+                mAnalogClockView.setVisibility(View.GONE);
+                mClockView.setVisibility(View.GONE);
+                break;
+            case 4: // sammy
+                mClockView.setVisibility(mDarkAmount != 1 ? (mShowClock ? View.VISIBLE : View.GONE) : View.VISIBLE);
+                mAnalogClockView.setVisibility(View.GONE);
+                mDeadPoolClockView.setVisibility(View.GONE);
+                break;
+            case 5: // sammy (bold)
+                mClockView.setVisibility(mDarkAmount != 1 ? (mShowClock ? View.VISIBLE : View.GONE) : View.VISIBLE);
+                mAnalogClockView.setVisibility(View.GONE);
+                mDeadPoolClockView.setVisibility(View.GONE);
+                break;
+        }
+
+        mDateView.setVisibility(mDarkAmount != 1 ? (mShowDate ? View.VISIBLE : View.GONE) : View.VISIBLE);
+
+        mAlarmStatusView.setVisibility(mDarkAmount != 1 ? (mShowAlarm && mAvailableAlarm ? View.VISIBLE : View.GONE)
+                : mAvailableAlarm ? View.VISIBLE : View.GONE);
+    }
+
+    private void updateSettings() {
         final ContentResolver resolver = getContext().getContentResolver();
 	final Resources res = getContext().getResources();
         View weatherPanel = findViewById(R.id.weather_panel);
+	boolean ConditionText = false;
         TextView noWeatherInfo = (TextView) findViewById(R.id.no_weather_info_text);
+
+	if (mWeatherConditionText != null) {
+            ConditionText = mWeatherConditionText.getText().toString() != "";
+        }
+	if (mWeatherView != null) {
+            mWeatherView.setVisibility(
+                (mShowWeather && ConditionText ? View.VISIBLE : View.GONE));
+        }
+	if (weatherPanel != null) {
+            weatherPanel.setVisibility(View.VISIBLE);
+        }
+	if (mWeatherConditionText != null) {
+            mWeatherConditionText.setVisibility(View.VISIBLE);
+        }
+	if (mWeatherCity != null) {
+            mWeatherCity.setVisibility(mShowLocation ? View.VISIBLE : View.INVISIBLE);
+        }
+        if (mWeatherConditionImage != null) {
+            if (mShowConditionIcon) {
+                mWeatherConditionImage.setVisibility(View.VISIBLE);
+            } else {
+                mWeatherConditionImage.setVisibility(View.GONE);
+            }
+        }
+        if (mWeatherCurrentTemp != null) {
+            mWeatherCurrentTemp.setVisibility(View.VISIBLE);
+        }
+	if (noWeatherInfo != null) {
+            noWeatherInfo.setVisibility(View.GONE);
+        }
+	if (dateFont == 0) {
+            mDateView.setTypeface(Typeface.create("sans-serif", Typeface.NORMAL));
+        }
+        if (dateFont == 1) {
+            mDateView.setTypeface(Typeface.create("sans-serif", Typeface.BOLD));
+        }
+        if (dateFont == 2) {
+            mDateView.setTypeface(Typeface.create("sans-serif", Typeface.ITALIC));
+        }
+        if (dateFont == 3) {
+            mDateView.setTypeface(Typeface.create("sans-serif", Typeface.BOLD_ITALIC));
+        }
+        if (dateFont == 4) {
+            mDateView.setTypeface(Typeface.create("sans-serif-light", Typeface.ITALIC));
+        }
+        if (dateFont == 5) {
+                mDateView.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
+        }
+        if (dateFont == 6) {
+            mDateView.setTypeface(Typeface.create("sans-serif-thin", Typeface.ITALIC));
+        }
+        if (dateFont == 7) {
+                mDateView.setTypeface(Typeface.create("sans-serif-thin", Typeface.NORMAL));
+        }
+        if (dateFont == 8) {
+            mDateView.setTypeface(Typeface.create("sans-serif-condensed", Typeface.NORMAL));
+        }
+        if (dateFont == 9) {
+            mDateView.setTypeface(Typeface.create("sans-serif-condensed", Typeface.ITALIC));
+        }
+        if (dateFont == 10) {
+            mDateView.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
+        }
+        if (dateFont == 11) {
+            mDateView.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD_ITALIC));
+        }
+        if (dateFont == 12) {
+            mDateView.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        }
+        if (dateFont == 13) {
+            mDateView.setTypeface(Typeface.create("sans-serif-medium", Typeface.ITALIC));
+        }
+        if (dateFont == 14) {
+                mDateView.setTypeface(Typeface.create("sans-serif-condensed-light", Typeface.NORMAL));
+        }
+        if (dateFont == 15) {
+                mDateView.setTypeface(Typeface.create("sans-serif-condensed-light", Typeface.ITALIC));
+        }
+        if (dateFont == 16) {
+                mDateView.setTypeface(Typeface.create("sans-serif-black", Typeface.NORMAL));
+        }
+        if (dateFont == 17) {
+                mDateView.setTypeface(Typeface.create("sans-serif-black", Typeface.ITALIC));
+        }
+        if (dateFont == 18) {
+                mDateView.setTypeface(Typeface.create("cursive", Typeface.NORMAL));
+        }
+        if (dateFont == 19) {
+                mDateView.setTypeface(Typeface.create("cursive", Typeface.BOLD));
+        }
+        if (dateFont == 20) {
+                mDateView.setTypeface(Typeface.create("casual", Typeface.NORMAL));
+        }
+        if (dateFont == 21) {
+                mDateView.setTypeface(Typeface.create("serif", Typeface.NORMAL));
+        }
+        if (dateFont == 22) {
+                mDateView.setTypeface(Typeface.create("serif", Typeface.ITALIC));
+        }
+        if (dateFont == 23) {
+                mDateView.setTypeface(Typeface.create("serif", Typeface.BOLD));
+        }
+        if (dateFont == 24) {
+                mDateView.setTypeface(Typeface.create("serif", Typeface.BOLD_ITALIC));
+        }
+        if (dateFont == 25) {
+                mDateView.setTypeface(Typeface.create("gobold-light-sys", Typeface.NORMAL));
+        }
+        if (dateFont == 26) {
+                mDateView.setTypeface(Typeface.create("roadrage-sys", Typeface.NORMAL));
+        }
+        if (dateFont == 27) {
+                mDateView.setTypeface(Typeface.create("snowstorm-sys", Typeface.NORMAL));
+        }
+        if (dateFont == 28) {
+                mDateView.setTypeface(Typeface.create("googlesans-sys", Typeface.NORMAL));
+        }
+        if (dateFont == 29) {
+                mDateView.setTypeface(Typeface.create("themeable-sys", Typeface.NORMAL));
+        }
+
+	AlarmManager.AlarmClockInfo nextAlarm =
+                 mAlarmManager.getNextAlarmClock(UserHandle.USER_CURRENT);
 
 	mShowAlarm = Settings.System.getIntForUser(resolver,
                 Settings.System.HIDE_LOCKSCREEN_ALARM, 1, UserHandle.USER_CURRENT) == 1;
@@ -430,117 +890,62 @@ public class KeyguardStatusView extends GridLayout implements
         mDateSelection = Settings.System.getIntForUser(resolver,
                 Settings.System.LOCKSCREEN_DATE_SELECTION, 0, UserHandle.USER_CURRENT);
 
-        mClockView = (TextClock) findViewById(R.id.clock_view);
-	mAnalogClockView = (CustomAnalogClock) findViewById(R.id.analog_clock_view);
-        mDeadPoolClockView = (DeadPoolAnalogClock) findViewById(R.id.deadpool_clock_view);
-        mDateView = (DateView) findViewById(R.id.date_view);
-        mAlarmStatusView = (TextView) findViewById(R.id.alarm_status);
-
 	RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) mKeyguardStatusArea.getLayoutParams();
         switch (mClockSelection) {
             case 0: // default digital
             default:
-                mClockView.setVisibility(!isDozeMode() ? (mShowClock ? View.VISIBLE : View.GONE) : View.VISIBLE);
-                mAnalogClockView.setVisibility(View.GONE);
-                mDeadPoolClockView.setVisibility(View.GONE);
                 params.addRule(RelativeLayout.BELOW, R.id.clock_view);
                 mClockView.setSingleLine(true);
+		mAnalogClockView.unregisterReceiver();
+                mDeadPoolClockView.unregisterReceiver();
                 break;
             case 1: // digital (bold)
-                mClockView.setVisibility(!isDozeMode() ? (mShowClock ? View.VISIBLE : View.GONE) : View.VISIBLE);
-                mAnalogClockView.setVisibility(View.GONE);
-                mDeadPoolClockView.setVisibility(View.GONE);
                 params.addRule(RelativeLayout.BELOW, R.id.clock_view);
                 mClockView.setSingleLine(true);
+		mAnalogClockView.unregisterReceiver();
+                mDeadPoolClockView.unregisterReceiver();
                 break;
             case 2: // analog
-                mAnalogClockView.setVisibility(!isDozeMode() ? (mShowClock ? View.VISIBLE : View.GONE) : View.VISIBLE);
-                mClockView.setVisibility(View.GONE);
-                mDeadPoolClockView.setVisibility(View.GONE);
                 params.addRule(RelativeLayout.BELOW, R.id.analog_clock_view);
+		mAnalogClockView.registerReceiver();
+                mDeadPoolClockView.unregisterReceiver();
                 break;
             case 3: // analog (deadpool)
-                mDeadPoolClockView.setVisibility(!isDozeMode() ? (mShowClock ? View.VISIBLE : View.GONE) : View.VISIBLE);
-                mAnalogClockView.setVisibility(View.GONE);
-                mClockView.setVisibility(View.GONE);
                 params.addRule(RelativeLayout.BELOW, R.id.deadpool_clock_view);
+		mAnalogClockView.unregisterReceiver();
+                mDeadPoolClockView.registerReceiver();		
                 break;
             case 4: // sammy
-                mClockView.setVisibility(!isDozeMode() ? (mShowClock ? View.VISIBLE : View.GONE) : View.VISIBLE);
-                mAnalogClockView.setVisibility(View.GONE);
-                mDeadPoolClockView.setVisibility(View.GONE);
                 params.addRule(RelativeLayout.BELOW, R.id.clock_view);
                 mClockView.setSingleLine(false);
+		mAnalogClockView.unregisterReceiver();
+                mDeadPoolClockView.unregisterReceiver();
                 break;
             case 5: // sammy (bold)
-                mClockView.setVisibility(!isDozeMode() ? (mShowClock ? View.VISIBLE : View.GONE) : View.VISIBLE);
-                mAnalogClockView.setVisibility(View.GONE);
-                mDeadPoolClockView.setVisibility(View.GONE);
                 params.addRule(RelativeLayout.BELOW, R.id.clock_view);
                 mClockView.setSingleLine(false);
+		mAnalogClockView.unregisterReceiver();
+                mDeadPoolClockView.unregisterReceiver();
                 break;
         }
 
 	switch (mDateSelection) {
             case 0: // default
             default:
-                mDateView.setVisibility(!isDozeMode() ? (mShowDate ? View.VISIBLE : View.GONE) : View.VISIBLE);
                 mDateView.setBackgroundResource(0);
-                mDateView.setTypeface(Typeface.DEFAULT);
                 mDateView.setPadding(0,0,0,0);
                 break;
             case 1: // semi-transparent box
-                mDateView.setVisibility(!isDozeMode() ? (mShowDate ? View.VISIBLE : View.GONE) : View.VISIBLE);
                 mDateView.setBackground(getResources().getDrawable(R.drawable.date_box_str_border));
-                mDateView.setTypeface(Typeface.DEFAULT_BOLD);
                 mDateView.setPadding(40,20,40,20);
                 break;
             case 2: // semi-transparent box (round)
-                mDateView.setVisibility(!isDozeMode() ? (mShowDate ? View.VISIBLE : View.GONE) : View.VISIBLE);
                 mDateView.setBackground(getResources().getDrawable(R.drawable.date_str_border));
-                mDateView.setTypeface(Typeface.DEFAULT_BOLD);
                 mDateView.setPadding(40,20,40,20);
                 break;
         }
-
+	updateVisibilities();
         updateDozeVisibleViews();
-
-        if (mWeatherView != null) {
-            mWeatherView.setVisibility(mShowWeather ?
-                View.VISIBLE : View.GONE);
-        }
-        if (noWeatherInfo != null) {
-            noWeatherInfo.setVisibility(forceHide ?
-                View.VISIBLE : View.GONE);
-        }
-        if (weatherPanel != null) {
-            weatherPanel.setVisibility(forceHide ?
-                View.GONE : View.VISIBLE);
-        }
-        if (mWeatherConditionText != null) {
-            mWeatherConditionText.setVisibility(forceHide ?
-                View.GONE : View.VISIBLE);
-        }
-        if (mWeatherConditionImage != null) {
-            if (mShowConditionIcon) {
-                mWeatherConditionImage.setVisibility(forceHide ?
-                    View.GONE : View.VISIBLE);
-            } else {
-                mWeatherConditionImage.setVisibility(View.GONE);
-            }
-        }
-        if (mWeatherCurrentTemp != null) {
-            mWeatherCurrentTemp.setVisibility(forceHide ?
-                View.GONE : View.VISIBLE);
-        }
-        if (mWeatherCity != null) {
-            if (mShowLocation) {
-                mWeatherCity.setVisibility(forceHide ?
-                    View.GONE : View.VISIBLE);
-            } else {
-                mWeatherCity.setVisibility(View.GONE);
-            }
-        }
     }
 
     @Override
@@ -548,7 +953,108 @@ public class KeyguardStatusView extends GridLayout implements
         if (DEBUG) Log.d(TAG, "weatherError " + errorReason);
     }
 
-    // DateFormat.getBestDateTimePattern is extremely expensive, and refresh is called often.
+    private void refreshLockFont() {
+        final Resources res = getContext().getResources();
+        boolean isPrimary = UserHandle.getCallingUserId() == UserHandle.USER_OWNER;
+        int lockClockFont = isPrimary ? getLockClockFont() : 4;
+
+        if (lockClockFont == 0) {
+            mClockView.setTypeface(Typeface.create("sans-serif", Typeface.NORMAL));
+        }
+        if (lockClockFont == 1) {
+            mClockView.setTypeface(Typeface.create("sans-serif", Typeface.BOLD));
+        }
+        if (lockClockFont == 2) {
+            mClockView.setTypeface(Typeface.create("sans-serif", Typeface.ITALIC));
+        }
+        if (lockClockFont == 3) {
+            mClockView.setTypeface(Typeface.create("sans-serif", Typeface.BOLD_ITALIC));
+        }
+        if (lockClockFont == 4) {
+            mClockView.setTypeface(Typeface.create("sans-serif-light", Typeface.ITALIC));
+        }
+        if (lockClockFont == 5) {
+                mClockView.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
+        }
+        if (lockClockFont == 6) {
+            mClockView.setTypeface(Typeface.create("sans-serif-thin", Typeface.ITALIC));
+        }
+        if (lockClockFont == 7) {
+                mClockView.setTypeface(Typeface.create("sans-serif-thin", Typeface.NORMAL));
+        }
+        if (lockClockFont == 8) {
+            mClockView.setTypeface(Typeface.create("sans-serif-condensed", Typeface.NORMAL));
+        }
+        if (lockClockFont == 9) {
+            mClockView.setTypeface(Typeface.create("sans-serif-condensed", Typeface.ITALIC));
+        }
+        if (lockClockFont == 10) {
+            mClockView.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
+        }
+        if (lockClockFont == 11) {
+            mClockView.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD_ITALIC));
+        }
+        if (lockClockFont == 12) {
+            mClockView.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        }
+        if (lockClockFont == 13) {
+            mClockView.setTypeface(Typeface.create("sans-serif-medium", Typeface.ITALIC));
+        }
+        if (lockClockFont == 14) {
+                mClockView.setTypeface(Typeface.create("sans-serif-condensed-light", Typeface.NORMAL));
+        }
+        if (lockClockFont == 15) {
+                mClockView.setTypeface(Typeface.create("sans-serif-condensed-light", Typeface.ITALIC));
+        }
+        if (lockClockFont == 16) {
+                mClockView.setTypeface(Typeface.create("sans-serif-black", Typeface.NORMAL));
+        }
+        if (lockClockFont == 17) {
+                mClockView.setTypeface(Typeface.create("sans-serif-black", Typeface.ITALIC));
+        }
+        if (lockClockFont == 18) {
+                mClockView.setTypeface(Typeface.create("cursive", Typeface.NORMAL));
+        }
+        if (lockClockFont == 19) {
+                mClockView.setTypeface(Typeface.create("cursive", Typeface.BOLD));
+        }
+        if (lockClockFont == 20) {
+                mClockView.setTypeface(Typeface.create("casual", Typeface.NORMAL));
+        }
+        if (lockClockFont == 21) {
+                mClockView.setTypeface(Typeface.create("serif", Typeface.NORMAL));
+        }
+        if (lockClockFont == 22) {
+                mClockView.setTypeface(Typeface.create("serif", Typeface.ITALIC));
+        }
+        if (lockClockFont == 23) {
+                mClockView.setTypeface(Typeface.create("serif", Typeface.BOLD));
+        }
+        if (lockClockFont == 24) {
+                mClockView.setTypeface(Typeface.create("serif", Typeface.BOLD_ITALIC));
+        }
+        if (lockClockFont == 25) {
+            mClockView.setTypeface(Typeface.create("gobold-light-sys", Typeface.NORMAL));
+        }
+        if (lockClockFont == 26) {
+            mClockView.setTypeface(Typeface.create("roadrage-sys", Typeface.NORMAL));
+        }
+        if (lockClockFont == 27) {
+            mClockView.setTypeface(Typeface.create("snowstorm-sys", Typeface.NORMAL));
+        }
+        if (lockClockFont == 28) {
+            mClockView.setTypeface(Typeface.create("googlesans-sys", Typeface.NORMAL));
+        }
+        if (lockClockFont == 29) {
+            mClockView.setTypeface(Typeface.create("themeable-sys", Typeface.NORMAL));
+        }
+    }
+
+    public void updateAll() {
+        updateSettings();
+        refresh();
+    }
+
     // This is an optimization to ensure we only recompute the patterns when the inputs change.
     private static final class Patterns {
         static String dateViewSkel;
@@ -560,10 +1066,7 @@ public class KeyguardStatusView extends GridLayout implements
             final Locale locale = Locale.getDefault();
             final Resources res = context.getResources();
 
-            final ContentResolver resolver = context.getContentResolver();
-            final boolean showAlarm = Settings.System.getIntForUser(resolver,
-                    Settings.System.HIDE_LOCKSCREEN_ALARM, 1, UserHandle.USER_CURRENT) == 1;
-            dateViewSkel = res.getString(hasAlarm && showAlarm
+            dateViewSkel = res.getString(hasAlarm
                     ? R.string.abbrev_wday_month_day_no_year_alarm
                     : R.string.abbrev_wday_month_day_no_year);
             final String clockView12Skel = res.getString(R.string.clock_12hr_format);
@@ -607,7 +1110,6 @@ public class KeyguardStatusView extends GridLayout implements
             mOwnerInfo.setAlpha(dark ? 0 : 1);
         }
 
-        updateDozeVisibleViews();
         //mBatteryDoze.setDark(dark);
         mClockView.setTextColor(ColorUtils.blendARGB(mTextColor, Color.WHITE, darkAmount));
         mDateView.setTextColor(ColorUtils.blendARGB(mDateTextColor, Color.WHITE, darkAmount));
@@ -616,7 +1118,8 @@ public class KeyguardStatusView extends GridLayout implements
         mAlarmStatusView.setCompoundDrawableTintList(ColorStateList.valueOf(blendedAlarmColor));
 	mAnalogClockView.setDark(dark);
         mDeadPoolClockView.setDark(dark);
-        refresh();
+        updateVisibilities();
+	updateDozeVisibleViews();
     }
 
     public void setPulsing(boolean pulsing) {
@@ -627,7 +1130,6 @@ public class KeyguardStatusView extends GridLayout implements
         mForcedMediaDoze =
                 reason == DozeLog.PULSE_REASON_FORCED_MEDIA_NOTIFICATION;
         updateDozeVisibleViews();
-        refresh();
     }
 
     private void updateDozeVisibleViews() {
@@ -638,7 +1140,6 @@ public class KeyguardStatusView extends GridLayout implements
                 child.setAlpha(mDarkAmount == 1 ? 0 : 1);
             }
         }
-	refreshTime();
     }
 
     class SettingsObserver extends ContentObserver {
@@ -656,7 +1157,12 @@ public class KeyguardStatusView extends GridLayout implements
                   Settings.System.OMNIJAWS_WEATHER_ICON_PACK), false, this, UserHandle.USER_ALL);
            resolver.registerContentObserver(Settings.System.getUriFor(
                   Settings.System.LOCK_SCREEN_SHOW_WEATHER_LOCATION), false, this, UserHandle.USER_ALL);
-
+	   resolver.registerContentObserver(Settings.System.getUriFor(
+		  Settings.System.LOCK_DATE_FONTS), false, this, UserHandle.USER_ALL);
+	   resolver.registerContentObserver(Settings.System.getUriFor(
+		  Settings.System.LOCKCLOCK_FONT_SIZE), false, this, UserHandle.USER_ALL);
+	   resolver.registerContentObserver(Settings.System.getUriFor(
+		  Settings.System.LOCKDATE_FONT_SIZE), false, this, UserHandle.USER_ALL);
            update();
         }
 
@@ -669,17 +1175,26 @@ public class KeyguardStatusView extends GridLayout implements
         public void onChange(boolean selfChange, Uri uri) {
            if (uri.equals(Settings.System.getUriFor(
                    Settings.System.LOCK_SCREEN_SHOW_WEATHER))) {
-               updateSettings(false);
+               updateSettings();
            } else if (uri.equals(Settings.System.getUriFor(
                    Settings.System.LOCK_SCREEN_WEATHER_CONDITION_ICON))) {
-               updateSettings(false);
+               updateSettings();
            } else if (uri.equals(Settings.System.getUriFor(
                    Settings.System.OMNIJAWS_WEATHER_ICON_PACK))) {
                queryAndUpdateWeather();
            }  else if (uri.equals(Settings.System.getUriFor(
                    Settings.System.LOCK_SCREEN_SHOW_WEATHER_LOCATION))) {
-               updateSettings(false);
-           }
+               updateSettings();
+	   } else if (uri.equals(Settings.System.getUriFor(
+                   Settings.System.LOCK_DATE_FONTS))) {
+                   refreshdatesize();
+           } else if (uri.equals(Settings.System.getUriFor(
+                   Settings.System.LOCKCLOCK_FONT_SIZE))) {
+                   updateclocksize();
+	   } else if (uri.equals(Settings.System.getUriFor(
+                   Settings.System.LOCKDATE_FONT_SIZE))) {
+                   updateSettings();
+	   }
            update();
         }
 
@@ -693,8 +1208,19 @@ public class KeyguardStatusView extends GridLayout implements
                 Settings.System.LOCK_SCREEN_WEATHER_CONDITION_ICON, 1) == 1;
            mShowLocation = Settings.System.getInt(resolver,
                 Settings.System.LOCK_SCREEN_SHOW_WEATHER_LOCATION, 1) == 1;
-
-           updateSettings(false);
+	   mLockClockFontSize = Settings.System.getIntForUser(resolver,
+                Settings.System.LOCKCLOCK_FONT_SIZE,
+                getResources().getDimensionPixelSize(R.dimen.widget_big_font_size),
+                UserHandle.USER_CURRENT);
+           mLockDateFontSize = Settings.System.getIntForUser(resolver,
+                Settings.System.LOCKDATE_FONT_SIZE,
+                getResources().getDimensionPixelSize(R.dimen.widget_label_font_size),
+                UserHandle.USER_CURRENT);
+	   dateFont = Settings.System.getIntForUser(resolver,
+                Settings.System.LOCK_DATE_FONTS, 8, UserHandle.USER_CURRENT);
+                updateclocksize();
+                refreshdatesize();
+                updateSettings();
          }
     }
 
