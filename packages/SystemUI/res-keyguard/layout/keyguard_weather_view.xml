@@ -33,7 +33,7 @@
         android:layout_gravity="center"
         android:includeFontPadding="false"
         android:text="@string/weather_info_not_available"
-        android:textSize="15sp"
+        android:textSize="14sp"
         android:textColor="?attr/wallpaperTextColor" />
 
     <LinearLayout
@@ -50,16 +50,14 @@
             android:layout_gravity="center_vertical"
             android:orientation="vertical" >
 
-    <TextView
-        android:id="@+id/condition"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="right"
-        android:includeFontPadding="false"
-        android:textSize="15sp"
-        android:textStyle="normal"
-        android:fontFamily="sans-serif-condensed"
-        android:textColor="?attr/wallpaperTextColor" />
+            <TextView
+                android:id="@+id/condition"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="right"
+                android:includeFontPadding="false"
+                android:textSize="15sp"
+                android:textColor="?attr/wallpaperTextColor" />
 
         </LinearLayout>
 
@@ -96,24 +94,20 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="left"
                 android:includeFontPadding="false"
-                android:textSize="15sp"
-                android:textStyle="normal"
-                android:fontFamily="sans-serif-condensed"
+                android:textSize="16sp"
                 android:textColor="?attr/wallpaperTextColor" />
 
         </LinearLayout>
     </LinearLayout>
 
-            <TextView
-                android:id="@+id/city"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:includeFontPadding="false"
-                android:textStyle="normal"
-                android:fontFamily="sans-serif-condensed"
-                android:letterSpacing="0.15"
-                android:textSize="16sp"
-                android:textColor="?attr/wallpaperTextColor" />
+    <TextView
+        android:id="@+id/city"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:includeFontPadding="false"
+        android:letterSpacing="0.15"
+        android:textSize="16sp"
+        android:textColor="?attr/wallpaperTextColor" />
 
 </LinearLayout>
